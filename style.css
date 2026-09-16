@@ -102,3 +102,31 @@ p,label,span {
 .toggle:checked + .slider:before {
     transform: translateX(32px);
 }
+
+/* =========================================================
+Spectrum colors
+Delete this section + #spectrum below to remove spectrum CSS.
+========================================================= */
+
+:root{
+--spectrum-background: #ffffff;
+--spectrum-bar: green;
+--spectrum-grid: #333333;
+}
+
+/* Spectrum display */
+#spectrum {
+display: block;
+
+width: 100%;
+max-width: 1000px;
+height: 250px;
+
+background: var(--spectrum-background);
+border: 1px solid var(--spectrum-grid);
+
+}
+
+/* =========================================================
+Existing CSS
+========================================================= */
