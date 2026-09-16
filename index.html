@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>mic → speaker</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+
+    <body>
+        <h1>Microphone to Speaker connecter - mic2spk</h1>
+
+        <label class="switch">
+            <input class="toggle" type="checkbox" id="enabled" />
+            <span class="slider"></span>
+            <span class="card-side"></span>
+        </label>
+
+        <br><br>
+
+        <div id="settings">
+            <label id="delayLabel" for="delay">
+                <span>Delay:</span>
+
+                <input
+                type="range"
+                id="delay"
+                min="0"
+                max="2000"
+                value="0"
+                list="dots"
+                >
+
+                <span id="delayValueLabel">
+                    <span id="delayValue">0</span>(ms)
+                </span>
+            </label>
+
+            <datalist id="dots">
+                <option value="0"></option>
+                <option value="100"></option>
+                <option value="200"></option>
+                <option value="300"></option>
+                <option value="400"></option>
+                <option value="500"></option>
+                <option value="600"></option>
+                <option value="700"></option>
+                <option value="800"></option>
+                <option value="900"></option>
+                <option value="1000"></option>
+                <option value="1100"></option>
+                <option value="1200"></option>
+                <option value="1300"></option>
+                <option value="1400"></option>
+                <option value="1500"></option>
+                <option value="1600"></option>
+                <option value="1700"></option>
+                <option value="1800"></option>
+                <option value="1900"></option>
+                <option value="2000"></option>
+            </datalist>
+        </div>
+
+        <br><br>
+
+        <p id="status-block">Status: <span id="status">Uninitialized.</span></p>
+
+        <script src="script.js"></script>
+    </body>
+</html>
