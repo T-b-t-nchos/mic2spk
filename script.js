@@ -142,7 +142,7 @@ enabled.addEventListener("change", async () => {
             console.error(error);
 
             statusValue.textContent =
-                "[Error] Couldn't start a mic: " +
+                "[Error] Couldn't initialize a microphone: " +
                 error.message;
 
             statusValue.style.color = "red";
