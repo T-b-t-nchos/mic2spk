@@ -1,7 +1,10 @@
 const enabled = document.getElementById("enabled");
 const delaySlider = document.getElementById("delay");
 const delayValue = document.getElementById("delayValue");
-const lowpassEnabled = document.getElementById("lowpass");
+const lowpassEnabled = [
+    document.getElementById("lowpass1"),
+    document.getElementById("lowpass2"),
+];
 const statusValue = document.getElementById("status");
 
 let firstTime = true;
@@ -13,12 +16,12 @@ let microphoneSource = null;
 let delayNode = null;
 let gainNode = null;
 
-let lowpassNode1 = null;
-let lowpassNode2 = null;
-let lowpassDryGain = null;
-let lowpassWetGain = null;
+const LOWPASS_FREQUENCIES = [
+    6000,
+    6000,
+];
 
-const LOWPASS_FREQUENCY = 6000;
+const lowpassStages = [];
 
 
 delaySlider.addEventListener("input", () => {
@@ -33,34 +36,46 @@ delaySlider.addEventListener("input", () => {
 });
 
 
-lowpassEnabled.addEventListener("change", () => {
-    updateLowpass();
+lowpassEnabled.forEach((checkbox) => {
+    checkbox.addEventListener("change", () => {
+        updateLowpass();
+    });
 });
 
+
 function updateLowpass() {
-    if (audioContext === null || lowpassDryGain === null || lowpassWetGain === null) {
+    if (audioContext === null || lowpassStages.length === 0) {
         return;
     }
 
     const now = audioContext.currentTime;
-    const filterEnabled = lowpassEnabled.checked;
 
-    lowpassDryGain.gain.cancelScheduledValues(now);
-    lowpassWetGain.gain.cancelScheduledValues(now);
+    lowpassStages.forEach((stage, index) => {
+        const filterEnabled = lowpassEnabled[index].checked;
 
-    lowpassDryGain.gain.setValueAtTime(lowpassDryGain.gain.value, now);
+        stage.dryGain.gain.cancelScheduledValues(now);
+        stage.wetGain.gain.cancelScheduledValues(now);
 
-    lowpassWetGain.gain.setValueAtTime(lowpassWetGain.gain.value, now);
+        stage.dryGain.gain.setValueAtTime(
+            stage.dryGain.gain.value,
+            now
+        );
 
-    lowpassDryGain.gain.linearRampToValueAtTime(
-        filterEnabled ? 0 : 1,
-        now + 0.005
-    );
+        stage.wetGain.gain.setValueAtTime(
+            stage.wetGain.gain.value,
+            now
+        );
 
-    lowpassWetGain.gain.linearRampToValueAtTime(
-        filterEnabled ? 1 : 0,
-        now + 0.005
-    );
+        stage.dryGain.gain.linearRampToValueAtTime(
+            filterEnabled ? 0 : 1,
+            now + 0.005
+        );
+
+        stage.wetGain.gain.linearRampToValueAtTime(
+            filterEnabled ? 1 : 0,
+            now + 0.005
+        );
+    });
 }
 
 
@@ -91,43 +106,65 @@ enabled.addEventListener("change", async () => {
                     microphoneStream
                 );
 
-            delayNode = audioContext.createDelay(2.0);
+            delayNode =
+                audioContext.createDelay(2.0);
 
-            delayNode.delayTime.value = Number(delaySlider.value) / 1000;
+            delayNode.delayTime.value =
+                Number(delaySlider.value) / 1000;
 
-            gainNode = audioContext.createGain();
+            gainNode =
+                audioContext.createGain();
 
-            gainNode.gain.value = enabled.checked ? 1 : 0;
-
-            lowpassNode1 = audioContext.createBiquadFilter();
-
-            lowpassNode1.type = "lowpass";
-            lowpassNode1.frequency.value = LOWPASS_FREQUENCY;
-            lowpassNode1.Q.value = 0.707;
+            gainNode.gain.value =
+                enabled.checked ? 1 : 0;
 
 
-            lowpassNode2 = audioContext.createBiquadFilter();
+            // Create LowPass stages
+            lowpassStages.length = 0;
 
-            lowpassNode2.type = "lowpass";
-            lowpassNode2.frequency.value = LOWPASS_FREQUENCY;
-            lowpassNode2.Q.value = 0.707;
+            LOWPASS_FREQUENCIES.forEach((frequency) => {
+                const filter = audioContext.createBiquadFilter();
+
+                const dryGain = audioContext.createGain();
+
+                const wetGain = audioContext.createGain();
+
+                filter.type = "lowpass";
+                filter.frequency.value = frequency;
+                filter.Q.value = 0.707;
+
+                lowpassStages.push({
+                    filter,
+                    dryGain,
+                    wetGain
+                });
+            });
 
 
-            lowpassDryGain = audioContext.createGain();
+            // Connect LowPass stages
+            let stageInput = microphoneSource;
 
-            lowpassWetGain = audioContext.createGain();
+            lowpassStages.forEach((stage) => {
+                const stageOutput =
+                    audioContext.createGain();
+
+                stageInput.connect(stage.dryGain);
+                stageInput.connect(stage.filter);
+
+                stage.filter.connect(stage.wetGain);
+
+                stage.dryGain.connect(stageOutput);
+                stage.wetGain.connect(stageOutput);
+
+                stageInput = stageOutput;
+            });
 
 
-            microphoneSource.connect(lowpassDryGain);
+            // Last stage → Delay
+            stageInput.connect(delayNode);
 
-            microphoneSource
-                .connect(lowpassNode1)
-                .connect(lowpassNode2)
-                .connect(lowpassWetGain);
 
-            lowpassDryGain.connect(delayNode);
-            lowpassWetGain.connect(delayNode);
-
+            // Output
             delayNode.connect(gainNode);
 
             gainNode.connect(
