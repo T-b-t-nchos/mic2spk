@@ -4,6 +4,7 @@ const delayValue = document.getElementById("delayValue");
 const lowpassEnabled = [
     document.getElementById("lowpass1"),
     document.getElementById("lowpass2"),
+    document.getElementById("lowpass3"),
 ];
 const statusValue = document.getElementById("status");
 
@@ -17,6 +18,7 @@ let delayNode = null;
 let gainNode = null;
 
 const LOWPASS_FREQUENCIES = [
+    6000,
     6000,
     6000,
 ];
