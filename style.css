@@ -59,6 +59,10 @@ p,label,span {
     font-size: 1.2rem;
 }
 
+#pipeline {
+    font-size: 0.8rem;
+}
+
 
 /*switch component*/
 .switch {

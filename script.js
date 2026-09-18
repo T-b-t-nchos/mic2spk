@@ -7,6 +7,7 @@ const lowpassEnabled = [
     document.getElementById("lowpass3"),
 ];
 const statusValue = document.getElementById("status");
+const pipelineValue = document.getElementById("pipeline");
 
 let firstTime = true;
 
@@ -35,12 +36,15 @@ delaySlider.addEventListener("input", () => {
             audioContext.currentTime
         );
     }
+
+    updatePipeline();
 });
 
 
 lowpassEnabled.forEach((checkbox) => {
     checkbox.addEventListener("change", () => {
         updateLowpass();
+        updatePipeline();
     });
 });
 
@@ -176,6 +180,7 @@ enabled.addEventListener("change", async () => {
 
             updateLowpass();
             updateStatus();
+            updatePipeline();
 
         } catch (error) {
             console.error(error);
@@ -206,6 +211,7 @@ enabled.addEventListener("change", async () => {
     );
 
     updateStatus();
+    updatePipeline();
 });
 
 
@@ -217,3 +223,26 @@ function updateStatus() {
     statusValue.style.color = enabled.checked ? "green" : "red";
 }
 
+function updatePipeline() {
+    // base :         {Microphone} → (Low-pass 1) → (Low-pass 2) → (Low-pass 3) → [Delay] → {Speaker}
+
+    const LEFT_ARROW = " → ";
+    const MIC = "{Microphone}";
+    const SPEAKER = "{Speaker}";
+
+    var lowPasses = "";
+
+    LOWPASS_FREQUENCIES.forEach((frequency, index) => {
+       if (lowpassEnabled[index].checked) {
+            lowPasses += `(${frequency}Hz Low-pass No.${index+1})${LEFT_ARROW}`;
+       }
+    });
+
+    const delay = `[${delayValue.textContent}ms Delay]`;
+    
+    const pipelineText = `${enabled.checked ? "":"<s>"}${MIC}${LEFT_ARROW}${lowPasses}${delay}${LEFT_ARROW}${SPEAKER}${enabled.checked ? "":"</s>"}`;
+    
+    pipelineValue.innerHTML = pipelineText;
+}
+
+updatePipeline();
