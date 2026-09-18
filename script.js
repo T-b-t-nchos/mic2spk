@@ -5,6 +5,7 @@ const lowpassEnabled = [
     document.getElementById("lowpass1"),
     document.getElementById("lowpass2"),
     document.getElementById("lowpass3"),
+    document.getElementById("lowpass4"),
 ];
 const statusValue = document.getElementById("status");
 const pipelineValue = document.getElementById("pipeline");
@@ -22,6 +23,7 @@ const LOWPASS_FREQUENCIES = [
     6000,
     6000,
     6000,
+    5000,
 ];
 
 const lowpassStages = [];
