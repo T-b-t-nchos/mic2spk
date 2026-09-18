@@ -92,109 +92,7 @@ enabled.addEventListener("change", async () => {
         statusValue.textContent = "Initializing...";
         statusValue.style.color = "";
 
-        try {
-            microphoneStream =
-                await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: false,
-                        noiseSuppression: false,
-                        autoGainControl: false
-                    }
-                });
-
-            audioContext = new AudioContext();
-
-            if (audioContext.state === "suspended") {
-                await audioContext.resume();
-            }
-
-
-            microphoneSource =
-                audioContext.createMediaStreamSource(
-                    microphoneStream
-                );
-
-            delayNode =
-                audioContext.createDelay(2.0);
-
-            delayNode.delayTime.value =
-                Number(delaySlider.value) / 1000;
-
-            gainNode =
-                audioContext.createGain();
-
-            gainNode.gain.value =
-                enabled.checked ? 1 : 0;
-
-
-            // Create LowPass stages
-            lowpassStages.length = 0;
-
-            LOWPASS_FREQUENCIES.forEach((frequency) => {
-                const filter = audioContext.createBiquadFilter();
-
-                const dryGain = audioContext.createGain();
-
-                const wetGain = audioContext.createGain();
-
-                filter.type = "lowpass";
-                filter.frequency.value = frequency;
-                filter.Q.value = 0.707;
-
-                lowpassStages.push({
-                    filter,
-                    dryGain,
-                    wetGain
-                });
-            });
-
-
-            // Connect LowPass stages
-            let stageInput = microphoneSource;
-
-            lowpassStages.forEach((stage) => {
-                const stageOutput =
-                    audioContext.createGain();
-
-                stageInput.connect(stage.dryGain);
-                stageInput.connect(stage.filter);
-
-                stage.filter.connect(stage.wetGain);
-
-                stage.dryGain.connect(stageOutput);
-                stage.wetGain.connect(stageOutput);
-
-                stageInput = stageOutput;
-            });
-
-
-            // Last stage → Delay
-            stageInput.connect(delayNode);
-
-
-            // Output
-            delayNode.connect(gainNode);
-
-            gainNode.connect(
-                audioContext.destination
-            );
-
-
-            updateLowpass();
-            updateStatus();
-            updatePipeline();
-
-        } catch (error) {
-            console.error(error);
-
-            statusValue.textContent =
-                "[Error] Couldn't initialize a microphone: " +
-                error.message;
-
-            statusValue.style.color = "red";
-
-            return;
-        }
+        initializeAudio();
 
         firstTime = false;
 
@@ -215,6 +113,113 @@ enabled.addEventListener("change", async () => {
     updateStatus();
     updatePipeline();
 });
+
+
+async function initializeAudio() {
+    try {
+        microphoneStream =
+            await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: false,
+                    noiseSuppression: false,
+                    autoGainControl: false
+                }
+            });
+
+        audioContext = new AudioContext();
+
+        if (audioContext.state === "suspended") {
+            await audioContext.resume();
+        }
+
+
+        microphoneSource =
+            audioContext.createMediaStreamSource(
+                microphoneStream
+            );
+
+        delayNode =
+            audioContext.createDelay(2.0);
+
+        delayNode.delayTime.value =
+            Number(delaySlider.value) / 1000;
+
+        gainNode =
+            audioContext.createGain();
+
+        gainNode.gain.value =
+            enabled.checked ? 1 : 0;
+
+
+        // Create LowPass stages
+        lowpassStages.length = 0;
+
+        LOWPASS_FREQUENCIES.forEach((frequency) => {
+            const filter = audioContext.createBiquadFilter();
+
+            const dryGain = audioContext.createGain();
+
+            const wetGain = audioContext.createGain();
+
+            filter.type = "lowpass";
+            filter.frequency.value = frequency;
+            filter.Q.value = 0.707;
+
+            lowpassStages.push({
+                filter,
+                dryGain,
+                wetGain
+            });
+        });
+
+
+        // Connect LowPass stages
+        let stageInput = microphoneSource;
+
+        lowpassStages.forEach((stage) => {
+            const stageOutput =
+                audioContext.createGain();
+
+            stageInput.connect(stage.dryGain);
+            stageInput.connect(stage.filter);
+
+            stage.filter.connect(stage.wetGain);
+
+            stage.dryGain.connect(stageOutput);
+            stage.wetGain.connect(stageOutput);
+
+            stageInput = stageOutput;
+        });
+
+
+        // Last stage → Delay
+        stageInput.connect(delayNode);
+
+
+        // Output
+        delayNode.connect(gainNode);
+
+        gainNode.connect(
+            audioContext.destination
+        );
+
+
+        updateLowpass();
+        updateStatus();
+        updatePipeline();
+
+    } catch (error) {
+        console.error(error);
+
+        statusValue.textContent =
+            "[Error] Couldn't initialize a microphone: " +
+            error.message;
+
+        statusValue.style.color = "red";
+
+        return;
+    }
+}
 
 
 function updateStatus() {
