@@ -17,6 +17,7 @@ let microphoneStream = null;
 let microphoneSource = null;
 
 let delayNode = null;
+let delayInput = null;
 let gainNode = null;
 
 const LOWPASS_FREQUENCIES = [
@@ -102,6 +103,11 @@ enabled.addEventListener("change", async () => {
 
     if (gainNode === null || audioContext === null) {
         return;
+    }
+
+
+    if (enabled.checked) {
+        resetDelay();
     }
 
 
@@ -194,6 +200,7 @@ async function initializeAudio() {
 
         // Last stage → Delay
         stageInput.connect(delayNode);
+        delayInput = stageInput;
 
 
         // Output
@@ -251,5 +258,30 @@ function updatePipeline() {
     
     pipelineValue.innerHTML = pipelineText;
 }
+
+
+function resetDelay() {
+    if (
+        audioContext === null ||
+        delayNode === null ||
+        delayInput === null
+    ) {
+        return;
+    }
+
+    delayInput.disconnect(delayNode);
+    delayNode.disconnect();
+
+    delayNode =
+        audioContext.createDelay(2.0);
+
+    delayNode.delayTime.value =
+        Number(delaySlider.value) / 1000;
+
+    delayInput.connect(delayNode);
+
+    delayNode.connect(gainNode);
+}
+
 
 updatePipeline();
